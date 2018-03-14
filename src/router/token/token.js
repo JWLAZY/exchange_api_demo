@@ -27,4 +27,19 @@ router.post('/addtoken',(req, res) => {
         }
     })
 })
+
+/**
+ * 代币转账
+ */
+router.post('/trantoken',(req,res) => {
+    const {tokenid,to,from,userinfo,count} = req.body;
+    token_api.tranToken(from, userinfo.id,count,tokenid,(error, data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
 module.exports = router;
