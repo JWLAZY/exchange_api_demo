@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const secort = require('../../config/index').getConfig().secort;
 const web3 = require('../../comman/web3helper').getWeb3();
+const coin_api = require('../coin/coin_api');
 
 let method = async function (error, data) {
     if(data){
@@ -148,7 +149,7 @@ module.exports = {
                 .on('receipt', function(receipt){
                     // console.log("")
                 })
-                .on('confirmation', function(confirmationNumber, receipt){ 
+                .on('confirmation', function(confirmationNumber, receipt){
                     console.log("收到第" + confirmationNumber +"次确认");
                     if(confirmationNumber === 12){
                         callback(null, receipt);
@@ -156,12 +157,12 @@ module.exports = {
                  })
                 .on('error', function(error){
                      callback(error);
-                }); 
+                });
 
             }
         })
     },
-    
+
     // 挂单
     addOrder: (params,callback) => {
         let {userinfo,tokenid,typeid,ethercount,count} = params;
@@ -173,18 +174,18 @@ module.exports = {
             }else{
                 callback(error,data);
             }
-            
+
         })
     },
 
-    // 
+    //
     getMyOrders: (params,callback) => {
         let {userinfo,status} = params;
         let sql = `
         select *,
         (select tel from user where id = orders.userid) tel,
         (select address from token where id = orders.tokenid) tokenaddress
-        from orders 
+        from orders
         where userid = ?;
         `
         sqlhelper.query_objc(sql,[userinfo.id],(error,data) => {
@@ -201,10 +202,10 @@ module.exports = {
 // 查看orderid 对应的挂单是否可以交易
 const autoExchange = (userid,tokenid,typeid,ethercount,count, orderid) => {
     let sql = `
-    select * 
+    select *
     from orders
     where userid != ?
-    and tokenid = ? and typeid != ? and count = ? 
+    and tokenid = ? and typeid != ? and count = ?
     and status = 0 and ethercount ${typeid?'>=':'<'} ?;
     `;
     // 找到代币个数一样的账单
@@ -213,10 +214,65 @@ const autoExchange = (userid,tokenid,typeid,ethercount,count, orderid) => {
             console.log(error);
         }else{
             console.log(data);
+            if(data.length == 0){
+                console.log('没有匹配的订单');
+            }else{
+                doExchange(orderid,data[0].id,(error,data) => {
+                    if(error){
+                        console.log(error);
+                    }else{
+
+                    }
+                })
+            }
         }
     })
 }
 
+const doExchange = (orderid1,orderid2, callback) => {
+    let sql = `
+    select *,
+    (select ethaddress from user where id = orders.userid) ethaddress,
+    (select address from token where id = orders.tokenid) tokenaddress
+    from orders
+    where id in (?,?);
+    `;
+    sqlhelper.query_objc(sql,[orderid1,orderid2],(error,data)=>{
+        let outorder,inorder;
+        if(data[0].typeid == 1){
+            outorder = data[0];
+            inorder = data[1];
+            // outorder 卖出代币的账单  收 eth 少
+            // inorder 买入代币的账单  出 eth 多
+
+        }else{
+            outorder = data[1];
+            inorder = data[0];
+        }
+        coin_api.transCoin(inorder.userid,outorder.userid,outorder.ethercount,(error,data)=>{
+            if(error){
+                // callback(error);
+                console.log(error);
+            }else{
+                console.log("eth 交易完成!");
+                // console.log(data);
+                if(outorder.ethercount < inorder.ethercount){
+                    // 交易剩余的差价
+                    let remainCount = inorder.ethercount - outorder.ethercount;
+                    coin_api.tranRemainCoinTo(inorder.userid, remainCount,(error,data)=>{
+                        console.log("差价转账成功")
+                        if(error){
+                            // callback(error);
+                            console.log(error)
+                        }
+                        // callback(null,"差价转账成功");
+                    })
+                }
+            }
+        })
+        
+    })
+}
 
 // 根据tel 来获取注册的用户
 const findOneUser = (tel, callback) => { // tel = "1 or 1 = 1;delete "
