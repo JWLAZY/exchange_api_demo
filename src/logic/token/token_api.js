@@ -66,7 +66,72 @@ module.exports = {
                 })
             }
         })
+    },
+
+    /**
+     * 代币转账
+     */
+    transToken: async (callback) => {
+        let fromAddress = "0xc375Db4A3D0A51464b5e0FF678704d8E71A146d7"; // 转币方
+        let toAddress = "0xd117c5478d0F0aA21546566468025863656F9D00"; // 接收方
+        let fromKey = "0xb6e963244393c684cbee7fc7e1996100134a9ae0b13947bb7122d9f28ccd7da7"; // 转币方私钥
+        let contractAddress = "0x12949d5846961fc4145b21bd3c6e49ea03cb255a"; // 代币地址
+        // 代币转账 相比较 ether 转账而言,就是 不传value 传data(data:智能合约方法的16机制字符串)
+        // to : 代币交易接收方是代币地址
+        // 1. 拿到智能合约实例
+        let contract = getOneERC20Token(contractAddress);
+        // 2. 合约转账方法 编码 => "0xsafsad" 的16机制字符串
+        // 获取代币最小单位
+        let decimals = await contract.methods.decimals().call(); // 6
+        let value =  1000;
+        for(let i = 0;i < decimals;i++){
+            value = value * 10;
+        }
+        let cdata = contract.methods.transfer(toAddress, value).encodeABI();
+        // 3. 构建账单
+        let tx = {
+            from: fromAddress,
+            to: contract.options.address,
+            data: cdata,
+            chainId: 15
+        }
+        // gas gasprice nonce
+        tx.gas = await web3.eth.estimateGas(tx);
+        tx.gasPrice = await web3.eth.getGasPrice();
+        tx.nonce = await web3.eth.getTransactionCount(fromAddress);
+        // 4. 签名账单
+        let signTX = await web3.eth.accounts.signTransaction(tx,fromKey);
+        // 5. 发送账单
+        web3.eth.sendSignedTransaction(signTX.rawTransaction)
+        .on('transactionHash', function(hash){
+            // on 是事件机制,只有当方法调用过程中回调了transactionHash事件才会走到这里
+            console.log("hash success:" + hash);
+        })
+        .on('receipt', function(receipt){
+            // console.log("")
+        })
+        .on('confirmation', function(confirmationNumber, receipt){ 
+            console.log("收到第" + confirmationNumber +"次确认");
+            if(confirmationNumber === 12){
+                callback(null, receipt);
+            }
+            })
+        .on('error', function(error){
+                callback(error);
+        }); 
+
     }
+}
+
+// 通过代币地址来获取代币实例
+let getOneERC20Token = (address) => {
+    let filepath = path.resolve(__dirname,'../../solinterface/token.json');
+    let interfacestring = JSON.parse(fs.readFileSync(filepath)).interface;
+    // 智能合约 => ABI
+    let interface = JSON.parse(interfacestring);
+    // 构建一个智能合约对象.并且返回(这个实例是和链上智能合约互动的一个桥梁)
+    let contract = new web3.eth.Contract(interface,address);
+    return contract;
 }
 
 // 根据一个智能合约 来查询智能合约的数据

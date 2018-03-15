@@ -30,4 +30,15 @@ router.post('/addtoken',(req, res) => {
         }
     })
 })
+
+router.post('/transtoken', (req, res) => {
+    token_api.transToken((error,data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
 module.exports = router;
