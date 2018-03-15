@@ -23,6 +23,8 @@ module.exports = {
      * 查找所有代币
      */
     getAllToken: (params,callback) => {
+        // 参数里面有一个用户地址
+        let {address} = params;
         let sql = 'select * from token;';
         sqlhelper.query(sql,(error, data) => {
             if(error || data.length === 0){
@@ -42,7 +44,7 @@ module.exports = {
                 })
 
                 let actions = contracts.map(contract => {
-                    return getTokenInfo(contract);
+                    return getTokenInfo(contract, address);
                 })
                 // actions = [
                 //     getTokenInfo(contracts[0]),
@@ -68,18 +70,29 @@ module.exports = {
 }
 
 // 根据一个智能合约 来查询智能合约的数据
-let getTokenInfo = (contract) => {
+// address 可传值 可不传(不查)
+let getTokenInfo = (contract,address) => {
     return new Promise((resolve,reject)=>{
-        return Promise.all([
+        let actions = [
             contract.methods.totalSupply().call(),
-            contract.methods.name().call()
-        ])
+            contract.methods.name().call(),
+            contract.methods.symbol().call()
+        ]
+        if(address){
+            actions.push(contract.methods.balanceOf(address).call());
+        }
+        return Promise.all(actions)
         .then(results => {
             // results 是由promise.all 的方法执行结果的结合
-            resolve({
+            let temp = {
                 total: results[0],
-                name: results[1]
-            })
+                name: results[1],
+                symbol: results[2],
+            }
+            if(results.length == 4){
+                temp.mybalance = results[3]
+            }
+            resolve(temp)
         })
     })
 }

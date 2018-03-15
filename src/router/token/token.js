@@ -6,7 +6,10 @@ const router = express.Router();
  * 查询所有代币
  */
 router.get('/alltoken',(req, res) => {
-    token_api.getAllToken({},(error, data) => {
+    // req.query = {address: "0xadfasfasfasd..."}
+    // 解构赋值
+    let {address} = req.query;
+    token_api.getAllToken({address:address},(error, data) => {
         if(error){
             res.send(fail(error));
         }else{

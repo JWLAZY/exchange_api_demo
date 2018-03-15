@@ -9,6 +9,8 @@ const user = require('./src/router/user/user');
 const token = require('./src/router/token/token');
 const secort = require('./src/config/index').getConfig().secort;
 
+const sqlhelper = require('./src/comman/sqlhelper');
+
 // express() 方法构造一个实例对象
 const app = express();
 
@@ -28,8 +30,19 @@ app.use('*',(req, res, next) => {
         if(err){
             res.send({errmsg:"token错误"})
         }else{
-            req.body.userinfo = decoded;
-            next();
+            let userid = decoded.id;
+            let sql = 'select * from user where id = ?';
+            sqlhelper.query_objc(sql,[userid],(error,data)=>{
+                // get req.query
+                // post req.body
+                // "GET" => "get"
+                if(req.method.toLocaleLowerCase() === 'get'){
+                    req.query.address = data[0].ethaddress;
+                }else{
+                    req.body.address = data[0].ethaddress;
+                }
+                next();
+            })
         }
     });
 })
