@@ -18,7 +18,7 @@ router.get('/alltoken',(req, res) => {
  * 添加代币
  */
 router.post('/addtoken',(req, res) => {
-    let {address, name, symbol} = req.body;
+    let {caddress, name, symbol} = req.body;
     token_api.addToken(req.body,(error, data) => {
         if(error){
             res.send(fail(error));

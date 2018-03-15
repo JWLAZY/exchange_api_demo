@@ -27,7 +27,11 @@ module.exports = {
             const tr = await web3.eth.accounts.signTransaction(txparams,"0xb6e963244393c684cbee7fc7e1996100134a9ae0b13947bb7122d9f28ccd7da7");
             web3.eth.sendSignedTransaction(tr.rawTransaction)
             .on('transactionHash', (hash) => {
-                console.log(`transactionHash:${  hash}`);
+                // ""''
+                // let a = '32323';
+                // `这是一个变量 ${ a }`
+                // console.log(`transactionHash:${  hash}`);
+                console.log("transactionHash:" + hash);
             })
             .on('receipt', (receipt) => {
                 console.log(`receipt:${  receipt}`);
@@ -43,8 +47,8 @@ module.exports = {
      * 添加代币
      */
     addToken: (params,callback) => {
-        let {address, name, symbol} = params;
-        findOneToken(address, (error,data) => {
+        let {address: caddress, name, symbol} = params;
+        findOneToken(address, (error,datas) => {
             if(data){
                 callback(new Error("该合约地址已经添加了"));
             }else{

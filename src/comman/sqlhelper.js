@@ -32,6 +32,9 @@ module.exports = {
         })
     },
     // 带参数的查询
+    //(error,data) => {
+    //     callback(error,data);
+    // }
     query_objc: (sql, objc, callback) => {
         // let sql = "insert into table (name,password) value (?,?);"
         pool.getConnection((error, connection) => {

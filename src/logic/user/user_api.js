@@ -102,6 +102,12 @@ module.exports = {
                 callback(null, {balance:ethnumber})
             }
         })
+    },
+    topUp: (userid,count, callback) => {
+        const sql = 'update user set balance = ? where  id = ?';
+        sqlhelper.query_objc(sql, [count.userid], (error,data) => {
+            callback(error,data);
+        })
     }
 }
 

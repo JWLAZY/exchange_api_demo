@@ -57,5 +57,16 @@ router.get('/balance',(req, res) => {
     })
 })
 
+router.post('/topup',(req,res) => {
+    let {count,userid} = req.body;
+    user_api.topUp(userid,count, (error, data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
 // 导出路由
 module.exports = router;
