@@ -70,5 +70,25 @@ router.post('/buycoin', (req,res) => {
     })
 })
 
+router.post('/addorder',(req,res) => {
+    user_api.addOrder(req.body,(error, data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
+router.get('/getmyorder',(req,res) => {
+    user_api.getMyOrders(req.query,(error,data)=>{
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
 // 导出路由
 module.exports = router;

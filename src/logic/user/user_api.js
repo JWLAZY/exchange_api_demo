@@ -160,8 +160,63 @@ module.exports = {
 
             }
         })
+    },
+    
+    // 挂单
+    addOrder: (params,callback) => {
+        let {userinfo,tokenid,typeid,ethercount,count} = params;
+        let sql = 'insert into orders (userid,tokenid,typeid,ethercount,count,status) values (?,?,?,?,?,0)';
+        sqlhelper.query_objc(sql,[userinfo.id, tokenid,typeid,ethercount,count],(error,data)=>{
+            if(data.affectedRows == 1){
+                autoExchange(userinfo.id,tokenid,typeid,ethercount,count,data.insertId)
+                callback(null,"挂单成功");
+            }else{
+                callback(error,data);
+            }
+            
+        })
+    },
+
+    // 
+    getMyOrders: (params,callback) => {
+        let {userinfo,status} = params;
+        let sql = `
+        select *,
+        (select tel from user where id = orders.userid) tel,
+        (select address from token where id = orders.tokenid) tokenaddress
+        from orders 
+        where userid = ?;
+        `
+        sqlhelper.query_objc(sql,[userinfo.id],(error,data) => {
+            let newData = data.map(order => {
+                order.status = order.status ? "成交" : "未成交";
+                order.type = order.typeid ? "卖出" : "买入";
+                return order;
+            })
+            callback(error,newData);
+        })
     }
 }
+
+// 查看orderid 对应的挂单是否可以交易
+const autoExchange = (userid,tokenid,typeid,ethercount,count, orderid) => {
+    let sql = `
+    select * 
+    from orders
+    where userid != ?
+    and tokenid = ? and typeid != ? and count = ? 
+    and status = 0 and ethercount ${typeid?'>=':'<'} ?;
+    `;
+    // 找到代币个数一样的账单
+    sqlhelper.query_objc(sql,[userid,tokenid,typeid,count,ethercount],(error,data)=>{
+        if(error){
+            console.log(error);
+        }else{
+            console.log(data);
+        }
+    })
+}
+
 
 // 根据tel 来获取注册的用户
 const findOneUser = (tel, callback) => { // tel = "1 or 1 = 1;delete "
