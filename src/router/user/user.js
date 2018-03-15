@@ -57,5 +57,18 @@ router.get('/balance',(req, res) => {
     })
 })
 
+// 用数据库的余额来购买ether
+router.post('/buycoin', (req,res) => {
+    //购买数量和购买者地址
+    let {count,address} = req.body;
+    user_api.buyCoin(address,count,(error,data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
 // 导出路由
 module.exports = router;

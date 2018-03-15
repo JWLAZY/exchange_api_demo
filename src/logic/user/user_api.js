@@ -102,6 +102,65 @@ module.exports = {
                 callback(null, {balance:ethnumber})
             }
         })
+    },
+    // 购买ether币 count = 10
+    buyCoin: (address, count, callback) => {
+        // 假设: 1 eth = 100rmb
+        // 0. 检测数据库余额够不够
+        // 1. 构建账单
+        // 2. 对账单签名(账单,发送方的密钥)
+        // 3. 发送签过名的账单(签名账单结果.rawTransaction)
+        // select * from user where ethaddress = '0xasadsasd' and balance >= 1000'
+        let sql = 'select * from user where ethaddress = ? and balance > ?';
+        sqlhelper.query_objc(sql,[address,count * 100],async (error,data)=>{
+            // 余额不足或者其他错误
+            if(error||data.length == 0){
+                callback(new Error("购买ether 出差请查看余额"))
+            }else{
+                // 交易账单
+                let form = "0xc375Db4A3D0A51464b5e0FF678704d8E71A146d7";
+                let formkey = "0xb6e963244393c684cbee7fc7e1996100134a9ae0b13947bb7122d9f28ccd7da7"
+                let value = web3.utils.toWei(`${count}`,'ether');
+                let txParms = {
+                    from: form,
+                    to: address,
+                    data: '0x00', // 当使用代币转账或者合约调用时
+                    value: value, // value 是转账金额
+                    chainId: 15
+                }
+                // 获取一下预估gas
+                let gas = await web3.eth.estimateGas(txParms);
+                // 获取当前gasprice
+                let gasPrice = await web3.eth.getGasPrice();
+                // 获取指定账户地址的交易数
+                let nonce = await web3.eth.getTransactionCount(form);
+                txParms.gas = gas;
+                txParms.gasprice = gasPrice;
+                txParms.nonce = nonce;
+                // 用密钥对账单进行签名
+                let signTx = await web3.eth.accounts.signTransaction(txParms,formkey)
+                // 将签过名的账单进行发送
+                web3.eth.sendSignedTransaction(signTx.rawTransaction)
+                .on('transactionHash', function(hash){
+                    // on 是事件机制,只有当方法调用过程中回调了transactionHash事件才会走到这里
+                    console.log("hash success:" + hash);
+                })
+                .on('receipt', function(receipt){
+                    // console.log("")
+                })
+                .on('confirmation', function(confirmationNumber, receipt){ 
+                    console.log("收到第" + confirmationNumber +"次确认");
+                    if(confirmationNumber === 12){
+                        callback(null, receipt);
+                    }
+                 })
+                .on('error', function(error){
+                     callback(error);
+                }); 
+
+            }
+        })
+
     }
 }
 
