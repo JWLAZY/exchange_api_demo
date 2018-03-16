@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const secort = require('../../config/index').getConfig().secort;
 const web3 = require('../../comman/web3helper').getWeb3();
 
+const token_api = require('../token/token_api');
+
 let method = async function (error, data) {
     if(data){
         callback(new Error("该手机号已经注册了"))
@@ -221,7 +223,13 @@ let coin_api = require('../coin/coin_api');
 // 需要知道需要转账的订单
 // orderid1 orderid2 => 需要交易的两个账单
 const transCoin = (orderid1,orderid2) => {
-    let sql = "select * from orders where id = ? or id = ?";
+    // sql 子查询: 根据查询结果中的一个字段去另一个表中查询并把结果加到结果中.
+    let sql = `
+    select *,
+    (select address from token where id = orders.tokenid) tokenaddress,
+    from orders 
+    where id = ? or id = ?;
+    `;
     sqlhelper.query_objc(sql,[orderid1,orderid2],(error,data) => {
         if(error || data.length != 2){
             console.log(error);
@@ -241,9 +249,18 @@ const transCoin = (orderid1,orderid2) => {
                     console.log(error);
                 }else{
                     console.log(`转给${outorder.userid} ${outorder.ethercount}个ether成功`)
+                    // eth 转账成功后,开始转代币
+                    token_api.transTokenForOrder(outorder.userid,inorder.userid, inorder.count,inorder.tokenaddress,(error,data)=>{
+                        if(error){
+                            console.log(error);
+                        }else{
+                            console.log("代币转账成功");
+                        }
+                    })
                 }
             })
             // 1. 代币转账
+
             // 2. 差价转账
             // 3. 更新数据库状态
         }
