@@ -226,7 +226,7 @@ const transCoin = (orderid1,orderid2) => {
     // sql 子查询: 根据查询结果中的一个字段去另一个表中查询并把结果加到结果中.
     let sql = `
     select *,
-    (select address from token where id = orders.tokenid) tokenaddress,
+    (select address from token where id = orders.tokenid) tokenaddress
     from orders 
     where id = ? or id = ?;
     `;
@@ -244,25 +244,45 @@ const transCoin = (orderid1,orderid2) => {
             }
             // fromid(ether 出) ,toid
             // ether 数量 是卖出代币方数量,(查询结果是卖出代币方收的ether 币买入代币方出的少)
+            // inorder 出10 个 ether买1000 代币  outorder 出1000个代币 买 9个ether
             coin_api.tranCoin(inorder.userid,outorder.userid,outorder.ethercount,(error,data)=>{
                 if(error){
                     console.log(error);
                 }else{
                     console.log(`转给${outorder.userid} ${outorder.ethercount}个ether成功`)
                     // eth 转账成功后,开始转代币
+                    // 
                     token_api.transTokenForOrder(outorder.userid,inorder.userid, inorder.count,inorder.tokenaddress,(error,data)=>{
                         if(error){
                             console.log(error);
                         }else{
                             console.log("代币转账成功");
+                            let count = inorder.ethercount - outorder.ethercount;
+                            // 转差价
+                            coin_api.tranRemainCoin(inorder.userid,count,(error,data)=>{
+                                if(error){
+                                    console.log(error);
+                                }else{
+                                    console.log("差价转账成功");
+                                    let updatesql = "update order set status = 1 where id in (?,?);"
+                                    // 更新数据库状态
+                                    sqlhelper.query_objc(sql,[orderid1,orderid2],(error,data)=>{
+                                        if(error){
+                                            console.log(error);
+                                        }else{
+                                            console.log("数据库状态改变成功");
+                                        }
+                                    })
+                                }
+                            })
                         }
                     })
                 }
             })
-            // 1. 代币转账
-
-            // 2. 差价转账
-            // 3. 更新数据库状态
+            // 0. 转ether给卖方 √
+            // 1. 卖方转代币给买方 √
+            // 2. 买方剩下的差价转给平台 √
+            // 3. 更新数据库状态 √
         }
     })
     
