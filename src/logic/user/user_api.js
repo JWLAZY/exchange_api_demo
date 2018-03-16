@@ -157,7 +157,6 @@ module.exports = {
                 .on('error', function(error){
                      callback(error);
                 }); 
-
             }
         })
     },
@@ -177,7 +176,7 @@ module.exports = {
             }else{
                 // 需要去遍历数据库 寻找匹配账单
                 // 如果有匹配的账单的话,就进行交易
-                autoExchange(params)
+                autoExchange(params, data.insertId);
                 callback(null,{msg:"创建订单成功"});
             }
         })
@@ -185,7 +184,7 @@ module.exports = {
 }
 
 // 查找交易账单并且交易
-const autoExchange = (params) => {
+const autoExchange = (params,orderid) => {
     let {userinfo,tokenid,count,ethercount,typeid} = params;
     // 我想买入1000代币 花10 eth 那么寻找的 (卖出1000代币并且 想收少于10个eth)
     // 1. 别人发起的账单
@@ -202,13 +201,56 @@ const autoExchange = (params) => {
     and ethercount ${typeid == 0 ? '<=' : '>='}  ${ethercount};
     `
     sqlhelper.query_objc(sql,[userinfo.id,typeid,count,ethercount],(error,data)=>{
-        if(error){
-            console.log(error);
+        if(error || data.length == 0){
+            if(error){
+                console.log(error );
+            }else{
+                console.log("没有找到匹配的账单");
+            }
         }else{
+            transCoin(orderid, data[0].id)
             console.log(`找到 ${data.length} 条匹配的数据`);
         }
     })
 }
+let coin_api = require('../coin/coin_api');
+// 进行转币
+// 1. 转eth
+// 2. 转token
+// 3. 转差价
+// 需要知道需要转账的订单
+// orderid1 orderid2 => 需要交易的两个账单
+const transCoin = (orderid1,orderid2) => {
+    let sql = "select * from orders where id = ? or id = ?";
+    sqlhelper.query_objc(sql,[orderid1,orderid2],(error,data) => {
+        if(error || data.length != 2){
+            console.log(error);
+        }else{
+            let inorder,outorder; // 买入代币订单,卖出代币订单
+            if(data[0].typeid == 0){
+                inorder = data[0];
+                outorder = data[1];
+            }else{
+                inorder = data[1];
+                outorder = data[0];
+            }
+            // fromid(ether 出) ,toid
+            // ether 数量 是卖出代币方数量,(查询结果是卖出代币方收的ether 币买入代币方出的少)
+            coin_api.tranCoin(inorder.userid,outorder.userid,outorder.ethercount,(error,data)=>{
+                if(error){
+                    console.log(error);
+                }else{
+                    console.log(`转给${outorder.userid} ${outorder.ethercount}个ether成功`)
+                }
+            })
+            // 1. 代币转账
+            // 2. 差价转账
+            // 3. 更新数据库状态
+        }
+    })
+    
+}
+
 
 // 根据tel 来获取注册的用户
 const findOneUser = (tel, callback) => { // tel = "1 or 1 = 1;delete "
