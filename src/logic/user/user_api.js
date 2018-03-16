@@ -264,9 +264,9 @@ const transCoin = (orderid1,orderid2) => {
                                     console.log(error);
                                 }else{
                                     console.log("差价转账成功");
-                                    let updatesql = "update order set status = 1 where id in (?,?);"
+                                    let updatesql = "update orders set status = 1 where id in (?,?);"
                                     // 更新数据库状态
-                                    sqlhelper.query_objc(sql,[orderid1,orderid2],(error,data)=>{
+                                    sqlhelper.query_objc(updatesql,[orderid1,orderid2],(error,data)=>{
                                         if(error){
                                             console.log(error);
                                         }else{
