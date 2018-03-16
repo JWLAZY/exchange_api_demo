@@ -255,7 +255,7 @@ const doExchange = (orderid1,orderid2, callback) => {
                 console.log(error);
             }else{
                 console.log("eth 交易完成!");
-                // console.log(data);
+                // 转账 代币
                 if(outorder.ethercount < inorder.ethercount){
                     // 交易剩余的差价
                     let remainCount = inorder.ethercount - outorder.ethercount;

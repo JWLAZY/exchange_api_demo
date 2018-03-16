@@ -120,6 +120,10 @@ module.exports = {
                 callback(error);
         }); 
 
+    },
+
+    transTokenForUser: () => {
+        
     }
 }
 
