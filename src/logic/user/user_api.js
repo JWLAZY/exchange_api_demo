@@ -160,7 +160,54 @@ module.exports = {
 
             }
         })
+    },
+    // 添加订单
+    addOrder: (params,callback) => {
+        // tokenid : 交易代币id
+        // count : 交易代币数量
+        // ethercount: 交易ether 数量
+        // typeid: 交易类型 (买入代币/卖出代币)
+        let {userinfo,tokenid,count,ethercount,typeid} = params;
+        let sql = `
+        insert into orders (userid,tokenid,count,ethercount,typeid,status) values(?,?,?,?,?,0);
+        `
+        sqlhelper.query_objc(sql,[userinfo.id,tokenid,count,ethercount,typeid],(error,data)=>{
+            if(error){
+                callback(error);
+            }else{
+                // 需要去遍历数据库 寻找匹配账单
+                // 如果有匹配的账单的话,就进行交易
+                autoExchange(params)
+                callback(null,{msg:"创建订单成功"});
+            }
+        })
     }
+}
+
+// 查找交易账单并且交易
+const autoExchange = (params) => {
+    let {userinfo,tokenid,count,ethercount,typeid} = params;
+    // 我想买入1000代币 花10 eth 那么寻找的 (卖出1000代币并且 想收少于10个eth)
+    // 1. 别人发起的账单
+    // 2. typeid 不一样(买入对应就找卖出的账单)
+    // 3. tokencount 一样
+    // 4. 如果是买入代币的话,那么寻找的账单中收入的eth 要少于买方
+    // 5. 如果是卖出代币的话,那么寻找的账单中卖出的eth 要多余卖方
+    let sql = `
+    select *
+    from orders
+    where userid != ${userinfo.id}
+    and typeid != ${typeid}
+    and count = ${count}
+    and ethercount ${typeid == 0 ? '<=' : '>='}  ${ethercount};
+    `
+    sqlhelper.query_objc(sql,[userinfo.id,typeid,count,ethercount],(error,data)=>{
+        if(error){
+            console.log(error);
+        }else{
+            console.log(`找到 ${data.length} 条匹配的数据`);
+        }
+    })
 }
 
 // 根据tel 来获取注册的用户

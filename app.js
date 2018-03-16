@@ -37,8 +37,10 @@ app.use('*',(req, res, next) => {
                 // post req.body
                 // "GET" => "get"
                 if(req.method.toLocaleLowerCase() === 'get'){
+                    req.query.userinfo = data[0];
                     req.query.address = data[0].ethaddress;
                 }else{
+                    req.body.userinfo = data[0];
                     req.body.address = data[0].ethaddress;
                 }
                 next();

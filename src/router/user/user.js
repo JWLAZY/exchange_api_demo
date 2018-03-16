@@ -70,5 +70,33 @@ router.post('/buycoin', (req,res) => {
     })
 })
 
+// 挂单1 要用 10个ETHER 换 1000 MT
+// 挂单2 要用 1000 MT 换 10个ETHER
+// 挂单之后找到可以匹配的交易
+// 然后转账(1的10个Ehter => 2, 2的1000MT转给1)
+
+// 挂单1 要用 10个ETHER 换 1000 MT
+// 挂单2 要用 1000 MT 换 9个ETHER
+// 挂单之后找到可以匹配的交易
+// 然后转账(1的10个Ehter => 2, 2的1000MT转给1)
+// 中间商赚差价(把剩下的币转到中间商的账户)
+
+
+// 目的 => 卖出或者买入代币(收获或者付出ether)
+// 只有代币的数量匹配才能够交易
+
+// 1000 MT  A 要 400MT  B 要600MT => 拆单
+
+router.post('/addorder', (req, res) => {
+    user_api.addOrder(req.body,(error,data)=>{
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
+
 // 导出路由
 module.exports = router;
