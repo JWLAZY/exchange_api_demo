@@ -18,10 +18,7 @@ router.post('/login',(req, res) => {
             if(error){
                 res.send(fail(error));
             }else{
-                res.send(success({
-                    data:data,
-                    accounts: accounts
-                }))
+                res.send(success(data));
             }
         })
     })
@@ -29,9 +26,7 @@ router.post('/login',(req, res) => {
 
 router.post('/register',(req,res) => {
     let {tel, email, password} = req.body;
-
     let params = {tel:tel,email:email,password:password};
-
     user_api.register(params, (error, data) => {
         if(error){
             res.send(fail(error));
@@ -41,14 +36,18 @@ router.post('/register',(req,res) => {
     })
 })
 
+router.get('/info', (req, res) => {
+    res.send(success(req.query.userinfo));
+})
+
 // /balance?id=1&name=wewrwe
 // req.query = {id:1,name=wewrwe}
 /**
  * 查询用户eth余额
  */
 router.get('/balance',(req, res) => {
-    let {id} = req.query;
-    user_api.getUserEthBalance(id,(error,data) => {
+    let {userinfo} = req.query;
+    user_api.getUserEthBalance(userinfo.id,(error,data) => {
         if(error){
             res.send(fail(error));
         }else{

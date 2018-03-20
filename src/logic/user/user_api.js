@@ -101,7 +101,11 @@ module.exports = {
                 let address = data[0].ethaddress;
                 let balance = await web3.eth.getBalance(address);
                 let ethnumber = web3.utils.fromWei(balance,'ether');
-                callback(null, {balance:ethnumber})
+                callback(null, {
+                    name:'以太币',
+                    symbol: 'Ether',
+                    balance:ethnumber
+                })
             }
         })
     },

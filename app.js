@@ -13,7 +13,14 @@ const sqlhelper = require('./src/comman/sqlhelper');
 
 // express() 方法构造一个实例对象
 const app = express();
-
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', '*');
+    res.header('Access-Control-Allow-Credentials','true');
+    next();
+  };
+app.use(allowCrossDomain);
 // 打印http 请求日志
 app.use(morgan('dev'));
 // 解析post 请求中的body
