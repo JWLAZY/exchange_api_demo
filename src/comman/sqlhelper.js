@@ -19,6 +19,7 @@ module.exports = {
             if(error){
                 console.log('连接数据失败');
                 callback(error);
+                connection.release()
             }else{
                 // 执行查询
                 connection.query(sql, (error, result) => {
@@ -27,6 +28,7 @@ module.exports = {
                     }else{
                         callback(null, result);
                     }
+                    connection.release()
                 })
             }
         })
@@ -37,6 +39,7 @@ module.exports = {
         pool.getConnection((error, connection) => {
             if(error){
                 callback(error);
+                connection.release()
             }else{
                 // 执行带参数的sql语句
                 connection.query(sql, objc, (error, result) => {
@@ -45,6 +48,7 @@ module.exports = {
                     }else{
                         callback(null, result);
                     }
+                    connection.release()
                 })
             }
         })
