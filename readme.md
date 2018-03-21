@@ -19,3 +19,67 @@
 ```
 npm start
 ```
+
+
+# 接口文档
+
+1. 用户登录
+
+```
+    path: /user/login
+    method: post
+    body: {
+        tel,
+        password
+    }
+    result: {
+        errcode:0,
+        data:{
+            token:343aerwew2423423
+        }
+    }
+```
+
+2. 用户注册
+
+```
+    path: /user/register
+    method: post
+    body: {
+        tel,
+        email,
+        password
+    }
+    result: {
+        errcode:0,
+        data:{
+            insertId:3
+        }
+    }
+```
+
+3. 用户ETHER余额
+
+```
+    path: /user/balance
+    method: get
+    result: {
+        errcode:0,
+        data:{
+            
+        }
+    }
+```
+
+4. 用户代币清单
+
+```
+    path: /token/alltoken
+    method: get
+    result: {
+        errcode:0,
+        data:{
+            ...
+        }
+    }
+```
