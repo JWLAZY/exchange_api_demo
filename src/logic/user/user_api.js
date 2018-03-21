@@ -150,6 +150,7 @@ module.exports = {
                 .on('transactionHash', function(hash){
                     // on 是事件机制,只有当方法调用过程中回调了transactionHash事件才会走到这里
                     console.log("hash success:" + hash);
+
                 })
                 .on('receipt', function(receipt){
                     // console.log("")
@@ -157,7 +158,10 @@ module.exports = {
                 .on('confirmation', function(confirmationNumber, receipt){ 
                     console.log("收到第" + confirmationNumber +"次确认");
                     if(confirmationNumber === 12){
-                        callback(null, receipt);
+                        let sql = 'update user set balance =  (balance-?) where ethaddress = ?';
+                        sqlhelper.query_objc(sql,[count * 100,address],(error,data) => {
+                            callback(null, receipt);
+                        })
                     }
                  })
                 .on('error', function(error){

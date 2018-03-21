@@ -31,7 +31,11 @@ router.post('/register',(req,res) => {
         if(error){
             res.send(fail(error));
         }else{
-            res.send(success(data))
+            if(data.affectedRows > 0){
+                res.send(success({message:"注册成功"}))
+            }else{
+                res.send(success(data))
+            }
         }
     })
 })

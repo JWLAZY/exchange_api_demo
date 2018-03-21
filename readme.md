@@ -83,3 +83,16 @@ npm start
         }
     }
 ```
+5. 用户购买ether
+
+```
+    path: /token/buycoin
+    method: post
+    body:{count:个数}
+    result: {
+        errcode:0,
+        data:{
+            receipt
+        }
+    }
+```
