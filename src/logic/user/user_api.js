@@ -208,7 +208,8 @@ const autoExchange = (params,orderid) => {
     where userid != ${userinfo.id}
     and typeid != ${typeid}
     and count = ${count}
-    and ethercount ${typeid == 0 ? '<=' : '>='}  ${ethercount};
+    and ethercount ${typeid == 0 ? '<=' : '>='}  ${ethercount}
+    and tokenid = ${tokenid};
     `
     sqlhelper.query_objc(sql,[userinfo.id,typeid,count,ethercount],(error,data)=>{
         if(error || data.length == 0){

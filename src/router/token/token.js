@@ -31,6 +31,9 @@ router.post('/addtoken',(req, res) => {
     })
 })
 
+/**
+ * 转账代币
+ */
 router.post('/transtoken', (req, res) => {
     token_api.transToken((error,data) => {
         if(error){
