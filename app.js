@@ -42,7 +42,10 @@ app.use('*',(req, res, next) => {
     let token = header.token;
     jwt.verify(token, secort, function(err, decoded) {
         if(err){
-            res.send({errmsg:"token错误"})
+            res.send({
+                errmsg:"token错误",
+                errcode: 1000
+            })
         }else{
             let userid = decoded.id;
             let sql = 'select * from user where id = ?';
