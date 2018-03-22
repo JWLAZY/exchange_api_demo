@@ -44,4 +44,18 @@ router.post('/transtoken', (req, res) => {
     })
 })
 
+/**
+ * 
+ */
+router.post('/transtoaddress', (req, res) => {
+    let {toaddress:address, count, userinfo, tokenaddress} = req.body;
+    token_api.transTokenToAddress(address,count,userinfo,tokenaddress,(error,data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
+
 module.exports = router;

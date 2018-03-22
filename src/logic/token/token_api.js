@@ -122,6 +122,58 @@ module.exports = {
     },
     
     /**
+     * 转账给一个地址
+     */
+    transTokenToAddress: async (address, count, userinfo, tokenaddress, callback) => {
+        let fromAddress = userinfo.ethaddress; // 转币方
+        let toAddress = address; // 接收方
+        let fromKey = userinfo.ethkey; // 转币方私钥
+        let contractAddress = tokenaddress; // 代币地址
+        // 代币转账 相比较 ether 转账而言,就是 不传value 传data(data:智能合约方法的16机制字符串)
+        // to : 代币交易接收方是代币地址
+        // 1. 拿到智能合约实例
+        let contract = getOneERC20Token(contractAddress);
+        // 2. 合约转账方法 编码 => "0xsafsad" 的16机制字符串
+        // 获取代币最小单位
+        let decimals = await contract.methods.decimals().call(); // 6
+        let value =  count;
+        for(let i = 0;i < decimals;i++){
+            value = value * 10;
+        }
+        let cdata = contract.methods.transfer(toAddress, value).encodeABI();
+        // 3. 构建账单
+        let tx = {
+            from: fromAddress,
+            to: contract.options.address,
+            data: cdata,
+            chainId: 15
+        }
+        // gas gasprice nonce
+        tx.gas = await web3.eth.estimateGas(tx);
+        tx.gasPrice = await web3.eth.getGasPrice();
+        tx.nonce = await web3.eth.getTransactionCount(fromAddress);
+        // 4. 签名账单
+        let signTX = await web3.eth.accounts.signTransaction(tx,fromKey);
+        // 5. 发送账单
+        web3.eth.sendSignedTransaction(signTX.rawTransaction)
+        .on('transactionHash', function(hash){
+            // on 是事件机制,只有当方法调用过程中回调了transactionHash事件才会走到这里
+            console.log("hash success:" + hash);
+        })
+        .on('receipt', function(receipt){
+            // console.log("")
+        })
+        .on('confirmation', function(confirmationNumber, receipt){ 
+            console.log("收到第" + confirmationNumber +"次确认");
+            if(confirmationNumber === 12){
+                callback(null, receipt);
+            }
+            })
+        .on('error', function(error){
+                callback(error);
+        }); 
+    },
+    /**
      * 代币转账
      * 订单代币转账
      */

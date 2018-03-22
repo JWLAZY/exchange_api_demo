@@ -100,6 +100,16 @@ router.post('/addorder', (req, res) => {
     })
 })
 
+// 获取个人账单
+router.get('/orders', (req,res) => {
+    user_api.getMyOrder(req.query, (error,data) => {
+        if(error){
+            res.send(fail(error));
+        }else{
+            res.send(success(data))
+        }
+    })
+})
 
 // 导出路由
 module.exports = router;

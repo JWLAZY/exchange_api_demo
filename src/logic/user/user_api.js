@@ -190,6 +190,29 @@ module.exports = {
                 callback(null,{msg:"创建订单成功"});
             }
         })
+    },
+    // 获取个人账单
+    getMyOrder: (params, callback) => {
+        let {userinfo} = params;
+        let sql = `
+        select * ,
+        (select address from token where id = orders.tokenid) tokenaddress,
+        CASE status 
+                WHEN 0 THEN '未交易' 
+                WHEN 1 THEN '已交易' 
+        ELSE '其他' END orderstatus,
+        CASE typeid 
+                WHEN 0 THEN '买入' 
+                WHEN 1 THEN '卖出' 
+        ELSE '其他' END type
+        from orders where userid = ?;`;
+        sqlhelper.query_objc(sql,[userinfo.id],(error,data) => {
+            if(error){
+                callback(error);
+            }else{
+                callback(error, data);
+            }
+        })
     }
 }
 
